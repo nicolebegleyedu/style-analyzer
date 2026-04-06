@@ -86,7 +86,6 @@ Respond ONLY with valid JSON in exactly this structure, no preamble, no markdown
   }
 });
 
-app.use(express.static(__dirname));
 app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
 
 const PORT = process.env.PORT || 10000;
