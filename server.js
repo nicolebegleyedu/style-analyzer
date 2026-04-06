@@ -86,7 +86,8 @@ Respond ONLY with valid JSON in exactly this structure, no preamble, no markdown
   }
 });
 
-app.get('/', (req, res) => res.send('Style Analyzer is running.'));
+app.use(express.static(__dirname));
+app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
