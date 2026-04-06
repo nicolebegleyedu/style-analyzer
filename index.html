@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Unleash Your Style Analyzer — Hair of the Dog Academy</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9f8f6; color: #1a1a1a; min-height: 100vh; padding: 2rem 1rem; }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 2rem; }
+  .logo { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #999; margin-bottom: 0.5rem; }
+  .title { font-size: 32px; font-weight: 600; color: #1a1a1a; line-height: 1.2; }
+  .subtitle { font-size: 15px; color: #666; margin-top: 0.5rem; line-height: 1.6; }
+  .upload-zone { border: 2px dashed #ccc; border-radius: 12px; padding: 2.5rem 1.5rem; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; margin-bottom: 1.5rem; background: white; }
+  .upload-zone:hover, .upload-zone.drag-over { border-color: #888; background: #f5f5f5; }
+  .upload-icon { font-size: 32px; margin-bottom: 0.75rem; }
+  .upload-main { font-size: 15px; font-weight: 600; margin-bottom: 0.25rem; }
+  .upload-sub { font-size: 13px; color: #888; }
+  .upload-limit { font-size: 12px; color: #aaa; margin-top: 0.5rem; }
+  #file-input { display: none; }
+  .thumb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-bottom: 1.5rem; }
+  .thumb-item { position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0; }
+  .thumb-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb-remove { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .count-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .count-label { font-size: 13px; color: #666; }
+  .count-num { font-size: 13px; font-weight: 600; }
+  .analyze-btn { width: 100%; padding: 16px; font-size: 16px; font-weight: 600; border-radius: 8px; cursor: pointer; border: none; background: #1a1a1a; color: white; transition: opacity 0.2s; }
+  .analyze-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .analyze-btn:not(:disabled):hover { opacity: 0.85; }
+  .status-msg { text-align: center; font-size: 14px; color: #666; margin: 1rem 0; min-height: 20px; }
+  .results-wrap { margin-top: 2rem; }
+  .results-heading { font-size: 22px; font-weight: 600; margin-bottom: 0.5rem; }
+  .legend { display: flex; gap: 16px; margin-bottom: 1.5rem; flex-wrap: wrap; padding-bottom: 1rem; border-bottom: 1px solid #e0e0e0; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #666; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .legend-dot.dominant { background: #2563eb; }
+  .legend-dot.present { background: #ccc; }
+  .legend-dot.gap { background: white; border: 1px solid #ccc; }
+  .category-block { margin-bottom: 1rem; background: white; border: 1px solid #e0e0e0; border-radius: 12px; padding: 1rem 1.25rem; }
+  .cat-name { font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
+  .trait-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .trait-pill { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: #f0f0f0; color: #333; border: 1px solid #e0e0e0; }
+  .trait-pill.dominant { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+  .trait-pill.gap { background: #f9f9f9; color: #bbb; border-color: #e0e0e0; text-decoration: line-through; }
+  .bridge-block { margin-top: 1.5rem; background: #f5f5f5; border-radius: 12px; padding: 1.25rem; border-left: 4px solid #1a1a1a; }
+  .bridge-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin-bottom: 0.5rem; }
+  .bridge-text { font-size: 15px; color: #1a1a1a; line-height: 1.7; }
+  .reset-btn { margin-top: 1.5rem; width: 100%; padding: 12px; font-size: 14px; border-radius: 8px; cursor: pointer; background: transparent; border: 1px solid #ccc; color: #666; }
+  .reset-btn:hover { background: #f5f5f5; }
+  .error-msg { background: #fef2f2; color: #991b1b; border-radius: 8px; padding: 0.75rem 1rem; font-size: 13px; margin-top: 1rem; border: 1px solid #fecaca; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="logo">Hair of the Dog Academy</div>
+    <div class="title">Unleash Your Style Analyzer</div>
+    <div class="subtitle">Upload 5–25 photos from your portfolio or inspiration folder. We'll analyze your dominant style traits across 9 categories.</div>
+  </div>
+
+  <div class="upload-zone" id="drop-zone">
+    <div class="upload-icon">📷</div>
+    <div class="upload-main">Drop photos here or click to browse</div>
+    <div class="upload-sub">JPG, PNG, or WEBP</div>
+    <div class="upload-limit">5 photos minimum · 25 maximum</div>
+  </div>
+  <input type="file" id="file-input" multiple accept="image/jpeg,image/png,image/webp" />
+
+  <div id="thumb-section" style="display:none;">
+    <div class="count-bar">
+      <span class="count-label">Photos selected</span>
+      <span class="count-num" id="count-display">0</span>
+    </div>
+    <div class="thumb-grid" id="thumb-grid"></div>
+  </div>
+
+  <button class="analyze-btn" id="analyze-btn" disabled>Analyze My Style</button>
+  <div class="status-msg" id="status-msg"></div>
+  <div id="error-area"></div>
+  <div class="results-wrap" id="results-wrap" style="display:none;"></div>
+</div>
+
+<script>
+const SERVER_URL = 'https://style-analyzer.onrender.com';
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const thumbGrid = document.getElementById('thumb-grid');
+const thumbSection = document.getElementById('thumb-section');
+const countDisplay = document.getElementById('count-display');
+const analyzeBtn = document.getElementById('analyze-btn');
+const statusMsg = document.getElementById('status-msg');
+const resultsWrap = document.getElementById('results-wrap');
+const errorArea = document.getElementById('error-area');
+let selectedFiles = [];
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  addFiles(Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')));
+});
+fileInput.addEventListener('change', e => addFiles(Array.from(e.target.files)));
+
+function addFiles(newFiles) {
+  selectedFiles = [...selectedFiles, ...newFiles].slice(0, 25);
+  renderThumbs();
+  updateUI();
+}
+function removeFile(idx) {
+  selectedFiles.splice(idx, 1);
+  renderThumbs();
+  updateUI();
+}
+function renderThumbs() {
+  thumbGrid.innerHTML = '';
+  selectedFiles.forEach((f, i) => {
+    const url = URL.createObjectURL(f);
+    const item = document.createElement('div');
+    item.className = 'thumb-item';
+    item.innerHTML = `<img src="${url}" /><button class="thumb-remove" onclick="removeFile(${i})">✕</button>`;
+    thumbGrid.appendChild(item);
+  });
+  thumbSection.style.display = selectedFiles.length > 0 ? 'block' : 'none';
+  countDisplay.textContent = selectedFiles.length;
+}
+function updateUI() {
+  analyzeBtn.disabled = selectedFiles.length < 5;
+  statusMsg.textContent = selectedFiles.length > 0 && selectedFiles.length < 5
+    ? `Add ${5 - selectedFiles.length} more photo${5 - selectedFiles.length === 1 ? '' : 's'} to analyze`
+    : '';
+}
+
+analyzeBtn.addEventListener('click', async () => {
+  errorArea.innerHTML = '';
+  resultsWrap.style.display = 'none';
+  analyzeBtn.disabled = true;
+  statusMsg.textContent = 'Uploading photos and analyzing your style... this takes about 20–30 seconds.';
+  try {
+    const formData = new FormData();
+    selectedFiles.forEach(file => formData.append('photos', file));
+    const response = await fetch(`${SERVER_URL}/analyze`, { method: 'POST', body: formData });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `Server error ${response.status}`);
+    }
+    const result = await response.json();
+    renderResults(result);
+    statusMsg.textContent = '';
+  } catch (err) {
+    statusMsg.textContent = '';
+    errorArea.innerHTML = `<div class="error-msg">Something went wrong: ${err.message}. Please try again.</div>`;
+    analyzeBtn.disabled = false;
+  }
+});
+
+function renderResults(data) {
+  let html = `<div class="results-heading">Your Style Report</div>`;
+  html += `<div class="legend">
+    <div class="legend-item"><div class="legend-dot dominant"></div> Dominant</div>
+    <div class="legend-item"><div class="legend-dot present"></div> Present</div>
+    <div class="legend-item"><div class="legend-dot gap"></div> Gap (opportunity)</div>
+  </div>`;
+  data.categories.forEach(cat => {
+    html += `<div class="category-block"><div class="cat-name">${cat.name}</div><div class="trait-list">`;
+    (cat.dominant || []).forEach(t => { html += `<span class="trait-pill dominant">${t}</span>`; });
+    (cat.present || []).forEach(t => { html += `<span class="trait-pill">${t}</span>`; });
+    (cat.gaps || []).forEach(t => { html += `<span class="trait-pill gap">${t}</span>`; });
+    html += `</div></div>`;
+  });
+  if (data.bridge) {
+    html += `<div class="bridge-block"><div class="bridge-label">Your style identity</div><div class="bridge-text">${data.bridge}</div></div>`;
+  }
+  html += `<button class="reset-btn" onclick="resetTool()">Analyze a different set of photos</button>`;
+  resultsWrap.innerHTML = html;
+  resultsWrap.style.display = 'block';
+  resultsWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  analyzeBtn.disabled = false;
+}
+
+function resetTool() {
+  selectedFiles = [];
+  thumbGrid.innerHTML = '';
+  thumbSection.style.display = 'none';
+  countDisplay.textContent = '0';
+  resultsWrap.style.display = 'none';
+  resultsWrap.innerHTML = '';
+  errorArea.innerHTML = '';
+  statusMsg.textContent = '';
+  analyzeBtn.disabled = true;
+}
+</script>
+</body>
+</html>
