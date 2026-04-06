@@ -6,7 +6,7 @@ const cors = require('cors');
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
-app.use(cors());
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 
 app.post('/analyze', upload.array('photos', 25), async (req, res) => {
